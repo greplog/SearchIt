@@ -17,25 +17,23 @@ public class DocumentReader {
 
     private File file;
     private static ExecutorService threads = Executors.newFixedThreadPool(100);
+    private LineIterator it;
 
-    public DocumentReader(File file) {
+    public DocumentReader(File file) throws IOException {
         this.file = file;
+        it = FileUtils.lineIterator(file, "UTF-8");
     }
 
 
     public void readDocument() throws IOException, InterruptedException {
-//        System.out.println("start " + new Date());
-        LineIterator it = FileUtils.lineIterator(file, "UTF-8");
         List<Callable<Object>> tasks = new ArrayList<>();
         try {
             while (it.hasNext()) {
                 String line = it.nextLine();
                 tasks.add(Executors.callable(new Tokenizer(line, file.getPath())));
-//                tokenizeLine(line, file.getPath());
             }
             threads.invokeAll(tasks);
         } finally {
-//            System.out.println("end " + new Date() + " tasks " + tasks.size());
             LineIterator.closeQuietly(it);
         }
     }

@@ -32,7 +32,8 @@ public class Main {
         Scanner scanner = new Scanner(System.in);
         String input;
         while((input = scanner.nextLine()) != null){
-            Set<Integer> docIds = fetchDocuments.getDocuments(input);
+            String param = scanner.nextLine();
+            Set<Integer> docIds = fetchDocuments.getDocuments(input, param);
             System.out.println(docIds.size());
             for(Integer doc : docIds) {
                 System.out.println(String.valueOf(idToDocument.get(doc)) + "  " + doc);
