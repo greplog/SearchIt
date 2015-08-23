@@ -1,50 +1,73 @@
 package reader;
 
+import com.google.common.base.Splitter;
+import indexes.InMemoryIndexes;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.LineIterator;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.*;
+import java.util.concurrent.*;
 
-import static indexes.InMemoryIndexes.*;
+import static indexes.InMemoryIndexes.documentToId;
+import static indexes.InMemoryIndexes.stopWords;
 
-public class DocumentReader{
+public class DocumentReader {
 
     private File file;
-    public DocumentReader(File file){
+    private static ExecutorService threads = Executors.newFixedThreadPool(100);
+
+    public DocumentReader(File file) {
         this.file = file;
     }
 
-    public void readDocument() throws IOException {
+
+    public void readDocument() throws IOException, InterruptedException {
+//        System.out.println("start " + new Date());
         LineIterator it = FileUtils.lineIterator(file, "UTF-8");
+        List<Callable<Object>> tasks = new ArrayList<>();
         try {
             while (it.hasNext()) {
                 String line = it.nextLine();
-                tokenizeLine(line, file.getPath());
+                tasks.add(Executors.callable(new Tokenizer(line, file.getPath())));
+//                tokenizeLine(line, file.getPath());
             }
+            threads.invokeAll(tasks);
         } finally {
+//            System.out.println("end " + new Date() + " tasks " + tasks.size());
             LineIterator.closeQuietly(it);
         }
     }
 
+
     private void tokenizeLine(String line, String fileName) {
-            Integer documentId = documentToId.get(fileName);
-            String[] tokens = line.split("\\s+");
-            for (String str : tokens) {
-                if(str.length() < 1) continue;
-                Map<String, Set<Integer>> map = preIndex.getOrDefault(preIndexKey(str), new ConcurrentHashMap<>());
-                Set<Integer> set = map.getOrDefault(str, new CopyOnWriteArraySet<>());
+        Integer documentId = documentToId.get(fileName);
+        for (String str : Splitter.onPattern("\\s+").split(line)) {
+            String prunedStr = pruning(str);
+            if(!isStopWord(prunedStr)) {
+                Map<String, Set<Integer>> map = InMemoryIndexes.preIndex
+                    .getOrDefault(preIndexKey(prunedStr), new ConcurrentHashMap<>());
+                Set<Integer> set = map.getOrDefault(prunedStr, new HashSet<>());
                 set.add(documentId);
-                map.put(str, set);
-                preIndex.put(preIndexKey(str), map);
+                map.put(prunedStr, set);
+                InMemoryIndexes.preIndex.put(preIndexKey(prunedStr), map);
             }
+        }
     }
 
-    private Integer preIndexKey(String str){
+    public static boolean isStopWord(String str){
+        if(stopWords.contains(str)){
+            return true;
+        }
+        return false;
+    }
+
+    public static String pruning(String str){
+        return str.toLowerCase();
+    }
+
+    private Integer preIndexKey(String str) {
         return str.charAt(0) % 131;
     }
 

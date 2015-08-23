@@ -4,17 +4,17 @@ import retrievel.FetchDocuments;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Date;
+import java.util.*;
 
-import static indexes.InMemoryIndexes.documentToId;
-import static indexes.InMemoryIndexes.idToDocument;
-import static indexes.InMemoryIndexes.numOfDocuments;
+import static indexes.InMemoryIndexes.*;
 
 public class Main {
 
+    public static boolean isAllIndexed = false;
+
     public static void main(String[] args) throws IOException, InterruptedException {
         printStatus();
-        File[] files = allFiles("/Users/sachin.goyal/Downloads/datasets/");
+        List<File> files = allFiles(new File("/Users/sachin.goyal/Desktop/enron_mail_20150507.tgz.xz/maildir/"), new ArrayList<>());
         for(File file : files){
             if(file.isFile()){
                 incrementDocCount(file.getPath());
@@ -22,9 +22,22 @@ public class Main {
                 reader.readDocument();
             }
         }
-        FetchDocuments fetchDocuments = new FetchDocuments();
-        System.out.println(String.valueOf(fetchDocuments.getDocuments("perhaps this")));
+        System.out.println(new Date() + " all files indexed");
         printStatus();
+        fetchDocuments();
+    }
+
+    private static void fetchDocuments(){
+        FetchDocuments fetchDocuments = new FetchDocuments();
+        Scanner scanner = new Scanner(System.in);
+        String input;
+        while((input = scanner.nextLine()) != null){
+            Set<Integer> docIds = fetchDocuments.getDocuments(input);
+            System.out.println(docIds.size());
+            for(Integer doc : docIds) {
+                System.out.println(String.valueOf(idToDocument.get(doc)) + "  " + doc);
+            }
+        }
     }
 
     private static void incrementDocCount(String fileName) {
@@ -33,15 +46,25 @@ public class Main {
         idToDocument.put(numOfDocuments, fileName);
     }
 
-    public static File[] allFiles(String path){
-        File folder = new File(path);
-        return folder.listFiles();
+    public static List<File> allFiles(File folder, List<File> filesList){
+        if(folder.isFile()){
+            filesList.add(folder);
+            return filesList;
+        }
+        for(File file : folder.listFiles()){
+            if(file.isFile()){
+                filesList.add(file);
+            }else{
+                allFiles(file, filesList);
+            }
+        }
+        return filesList;
     }
 
     public static void printStatus(){
         System.out.println(new Date() + "   " + InMemoryIndexes.documentToId.size());
         System.out.println(new Date() + "   " + InMemoryIndexes.numOfDocuments);
-        System.out.println(new Date() + "   " + InMemoryIndexes.invertedIndex.size());
+        System.out.println(new Date() + "   " + InMemoryIndexes.preIndex.size());
         System.out.println(Runtime.getRuntime().freeMemory());
     }
 }
