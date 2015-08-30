@@ -1,0 +1,16 @@
+.DS_Store
+.idea/compiler.xml
+.idea/copyright/profiles_settings.xml
+.idea/description.html
+.idea/encodings.xml
+.idea/libraries/com_google_api_client_google_api_client_repackaged_com_google_common_base_1_2_3_alpha.xml
+.idea/libraries/com_google_guava_guava_r09.xml
+.idea/libraries/org_apache_commons_com_springsource_org_apache_commons_io_1_4_0.xml
+.idea/misc.xml
+.idea/modules.xml
+.idea/uiDesigner.xml
+.idea/vcs.xml
+.idea/workspace.xml
+SearchIt.iml
+out/production/.DS_Store
+out/production/SearchIt/.DS_Store

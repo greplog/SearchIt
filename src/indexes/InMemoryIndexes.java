@@ -1,14 +1,12 @@
 package indexes;
 
 
+import entities.Position;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.LineIterator;
 
 import java.io.File;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class InMemoryIndexes {
@@ -17,6 +15,10 @@ public class InMemoryIndexes {
     public static Map<String, Integer> documentToId = new HashMap<>();
     public static Set<String> stopWords = new HashSet<>();
     public static Integer numOfDocuments = 0;
+    public static Map<String, Map<Integer, List<Position>>> fileIndex = new ConcurrentHashMap<>();
+    public static Map<String, Integer> wordFrequency = new ConcurrentHashMap<>();
+    public static Map<String, Object> wordLock = new ConcurrentHashMap<>();
+    public static final Integer THRESHOLD_FOR_SERIALIZING = 1000*1000;
 
     static {
         LineIterator it = null;
@@ -31,6 +33,5 @@ public class InMemoryIndexes {
         } finally {
             LineIterator.closeQuietly(it);
         }
-
     }
 }
